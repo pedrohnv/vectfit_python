@@ -46,3 +46,13 @@ If you have issues, and perhaps notice warnings about ill-conditioned matrices,
 subtitute the `vectfit.vectfit_auto` method with `vectfit.vectfit_auto_rescale`,
 which rescales the problem before passing it to vectfit_auto, with the intention
 of making problem more numerically stable.
+
+# Version 2
+
+A modified version with a coding style and documentation more to my liking.
+
+## use example
+
+poles = fitting_poles(f, s, initial_poles)
+residues, d, h = fitting_residues(f, s, poles)
+fitted = rational_model(s, poles, residues, d, h) # fitted response
