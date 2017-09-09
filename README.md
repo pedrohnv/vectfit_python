@@ -53,6 +53,9 @@ A modified version with a coding style and documentation more to my liking.
 
 ## use example
 
+vectfit_2.py
+==========
+
 poles = fitting_poles(f, s, initial_poles)
 residues, d, h = fitting_residues(f, s, poles)
 fitted = rational_model(s, poles, residues, d, h) # fitted response
