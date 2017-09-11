@@ -23,9 +23,19 @@ and the following papers:
      
 Version 2 is a modification mainly of naming, code organization
 and documentation. By Pedro H. N. Vieira.
+
+A warning about Ill conditioning of the problem may arise. To ignore
+it in your code use
+
+```
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    fitted = vector_fitting(f,s)
+```
 """
 import numpy
 import matplotlib.pyplot as plt
+import warnings
 
 def rational_model(s, poles, residues, d, h):
     """
@@ -54,8 +64,7 @@ def rational_model(s, poles, residues, d, h):
     y = numpy.vectorize(f)
     return y(s)
 
-
-def identify_poles(poles, Ns):
+def flag_poles(poles, Ns):
     """
     Identifies a given pole:
         0 : real
@@ -99,7 +108,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True):
         note: All complex poles must come in sequential complex
         conjugate pairs
     cindex : identifying array of the poles (real or complex)
-    f_residues : bool, default True
+    f_residues : bool, default=True
         signals if the residues of sigma (True) or f (False) are being
         calculated. The equation is a bit different in each case.
     
@@ -121,7 +130,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True):
             raise RuntimeError("cindex[%s] = %s" % (i, cindex[i]))
         
         if sigma_residues:
-            A [:, N+2+i] = -A[:, i]*f
+            A[:, N+2+i] = -A[:, i]*f
 
     A[:, N] = 1
     A[:, N+1] = s
@@ -131,9 +140,9 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True):
     b = numpy.concatenate((b.real, b.imag))
     cA = numpy.linalg.cond(A)
     if cA > 1e13:
-        print('Warning!: Ill Conditioned Matrix. Consider scaling the'
-              + ' problem down')
-        print('Cond(A)', cA)
+        message = ('Ill Conditioned Matrix. Cond(A) = ' + str(cA) 
+                    + ' . Consider scaling the problem down.')
+        warnings.warn(message, UserWarning)
     return A, b
 
 def fitting_poles(f, s, poles):
@@ -154,7 +163,7 @@ def fitting_poles(f, s, poles):
     """
     N = len(poles)
     Ns = len(s)
-    cindex = identify_poles(poles, Ns)
+    cindex = flag_poles(poles, Ns)
 
     # calculates the residues of sigma
     A, b = residues_equation(f, s, poles, cindex)
@@ -206,7 +215,7 @@ def fitting_residues(f, s, poles):
     """
     N = len(poles)
     Ns = len(s)
-    cindex = identify_poles(poles, Ns)
+    cindex = flag_poles(poles, Ns)
 
     # calculates the residues of sigma
     A, b = residues_equation(f, s, poles, cindex, False)
@@ -236,16 +245,16 @@ def vector_fitting(f, s, n_poles=10, loss_ratio=0.01, n_iter=3,
     f : array of the complex data to fit
     s : complex sampling points of f
     n_poles : optional int, default=10
-            number of conjugate pairs of the fitting function.
-            Only used if initial_poles=None
+        number of conjugate pairs of the fitting function.
+        Only used if initial_poles=None
     loss_ratio : optional float, default=0.01
-            The initial poles guess, if not given, are estimated as
-            w*(-loss_ratio + 1j)
+        The initial poles guess, if not given, are estimated as
+        w*(-loss_ratio + 1j)
     n_iter : optional int, default=3
-            number of iterations to do to calculate the poles, i.e.,
-            consecutive pole fitting
+        number of iterations to do to calculate the poles, i.e.,
+        consecutive pole fitting
     initial_poles : optional array, default=None
-            The initial pole guess
+        The initial pole guess
     
     Returns
     -------
