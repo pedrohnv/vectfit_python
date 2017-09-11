@@ -235,7 +235,7 @@ def fitting_residues(f, s, poles):
     h = x[N+1].real
     return residues, d, h
 
-def vector_fitting(f, s, n_poles=10, loss_ratio=0.01, n_iter=3,
+def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
                    initial_poles=None):
     """
     Makes the vector fitting of a complex function.
@@ -244,7 +244,7 @@ def vector_fitting(f, s, n_poles=10, loss_ratio=0.01, n_iter=3,
     ----------
     f : array of the complex data to fit
     s : complex sampling points of f
-    n_poles : optional int, default=10
+    poles_pairs : optional int, default=10
         number of conjugate pairs of the fitting function.
         Only used if initial_poles=None
     loss_ratio : optional float, default=0.01
@@ -262,7 +262,7 @@ def vector_fitting(f, s, n_poles=10, loss_ratio=0.01, n_iter=3,
     """
     w = s.imag
     if initial_poles == None:
-        beta = numpy.linspace(w[0], w[-1], n_poles+2)[1:-1]
+        beta = numpy.linspace(w[0], w[-1], poles_pairs+2)[1:-1]
         initial_poles = numpy.array([])
         p = numpy.array([[-loss_ratio + 1j], [-loss_ratio - 1j]])
         for b in beta:
