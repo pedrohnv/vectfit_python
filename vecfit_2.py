@@ -226,6 +226,47 @@ def fitting_residues(f, s, poles):
     h = x[N+1].real
     return residues, d, h
 
+def vector_fitting(f, s, n_poles=10, loss_ratio=0.01, n_iter=3,
+                   initial_poles=None):
+    """
+    Makes the vector fitting of a complex function.
+    
+    Parameters
+    ----------
+    f : array of the complex data to fit
+    s : complex sampling points of f
+    n_poles : optional int, default=10
+            number of conjugate pairs of the fitting function.
+            Only used if initial_poles=None
+    loss_ratio : optional float, default=0.01
+            The initial poles guess, if not given, are estimated as
+            w*(-loss_ratio + 1j)
+    n_iter : optional int, default=3
+            number of iterations to do to calculate the poles, i.e.,
+            consecutive pole fitting
+    initial_poles : optional array, default=None
+            The initial pole guess
+    
+    Returns
+    -------
+    fitted(s) : the fitted function with 's' as parameter
+    """
+    w = s.imag
+    if initial_poles == None:
+        beta = numpy.linspace(w[0], w[-1], n_poles+2)[1:-1]
+        initial_poles = numpy.array([])
+        p = numpy.array([[-loss_ratio + 1j], [-loss_ratio - 1j]])
+        for b in beta:
+            initial_poles = numpy.append(initial_poles, p*b)
+        
+    poles = initial_poles
+    for _ in range(n_iter):
+        poles = fitting_poles(f, s, poles)
+        
+    residues, d, h = fitting_residues(f, s, poles)
+    fitted = lambda s: rational_model(s, poles, residues, d, h)
+    return fitted
+
 def test():
     true_poles = numpy.array([-4500, -41e3,
                      -100 + 5e3j, -100 - 5e3j,
@@ -262,9 +303,11 @@ def test():
                               -8.88e2 + 8.88e4j, -8.88e2 - 8.88e4j,
                               -1e3 + 1e5j, -1e3 - 1e5j])
     
-    poles = fitting_poles(test_f, s, initial_poles)
-    residues, d, h = fitting_residues(test_f, s, poles)
-    fitted = rational_model(s, poles, residues, d, h)
+#    poles = fitting_poles(test_f, s, initial_poles)
+#    residues, d, h = fitting_residues(test_f, s, poles)
+#    fitted = rational_model(s, poles, residues, d, h)
+    fitted = vector_fitting(test_f, s, initial_poles=initial_poles)
+    fitted = fitted(s)
     
     fig = plt.figure()
     ax = fig.add_subplot(111)
