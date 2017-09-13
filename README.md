@@ -1,62 +1,37 @@
-vectfit.py
-==========
-
 Duplication of the [Fast Relaxed Vector-Fitting algorithm](http://www.sintef.no/Projectweb/VECTFIT/) in python.
 
-To use, put vectfit.py somewhere on your path
+This version was inspired by the one made by Phil Reinhold. The changes are mainly of documentation and code organization. There is no auto rescaling of the problem!
 
-```python
-import vectfit
-import numpy as np
-
-# Create some test data using known poles and residues
-# Substitute your source of data as needed
-
-# Note our independent variable lies along the imaginary axis
-test_s = 1j*np.linspace(1, 1e5, 800)
-
-# Poles are produced in complex conjugate pairs
-test_poles = [
-    -4500,
-    -41000,
-    -100+5000j, -100-5000j,
-    -120+15000j, -120-15000j,
-    -3000+35000j, -3000-35000j,
-]
-
-# As are the associated resdiues
-test_residues = [
-    -3000,
-    -83000,
-    -5+7000j, -5-7000j,
-    -20+18000j, -20-18000j,
-    6000+45000j, 6000-45000j,
-]
-
-# d == offset, h == slope
-test_d = .2
-test_h = 2e-5
-test_f = vectfit.model(test_s, test_poles, test_residues, test_d, test_h)
-
-# Run algorithm, results hopefully match the known model parameters
-poles, residues, d, h = vectfit.vectfit_auto(test_f, test_s, n_poles=5)
+Example of use:
 ```
-
-If you have issues, and perhaps notice warnings about ill-conditioned matrices,
-subtitute the `vectfit.vectfit_auto` method with `vectfit.vectfit_auto_rescale`,
-which rescales the problem before passing it to vectfit_auto, with the intention
-of making problem more numerically stable.
-
-# Version 2
-
-A modified version with a coding style and documentation more to my liking.
-
-## use example
-
-vectfit_2.py
-==========
-```
-poles = fitting_poles(f, s, initial_poles)
-residues, d, h = fitting_residues(f, s, poles)
-fitted = rational_model(s, poles, residues, d, h) # fitted response
+def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
+                   initial_poles=None):
+    """
+    Makes the vector fitting of a complex function.
+    
+    Parameters
+    ----------
+    f : array of the complex data to fit
+    s : complex sampling points of f
+    poles_pairs : optional int, default=10
+        number of conjugate pairs of the fitting function.
+        Only used if initial_poles=None
+    loss_ratio : optional float, default=0.01
+        The initial poles guess, if not given, are estimated as
+        w*(-loss_ratio + 1j)
+    n_iter : optional int, default=3
+        number of iterations to do to calculate the poles, i.e.,
+        consecutive pole fitting
+    initial_poles : optional array, default=None
+        The initial pole guess
+    
+    Returns
+    -------
+    fitted(s) : the fitted function with 's' as parameter
+    """
+	
+f = some_data
+s = sampling_points
+fitted = vector_fitting(f, s) # returns a lambda function of 's'
+fitted_s = fitted(s)    
 ```
