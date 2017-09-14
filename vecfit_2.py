@@ -22,7 +22,7 @@ and the following papers:
      Letters, vol. 18, no. 6, pp. 383-385, June 2008.
      
 Version 2 is a modification mainly of naming, code organization
-and documentation. By Pedro H. N. Vieira.
+and documentation by Pedro H. N. Vieira.
 
 A warning about Ill conditioning of the problem may arise. To ignore
 it in your code use
@@ -45,7 +45,7 @@ def rational_model(s, poles, residues, d, h):
     ----------
     s : array of complex frequencies.
     poles : array of the pn
-    residues : arrai of the rn
+    residues : array of the rn
     d : real, offset
     h : real, slope
     
@@ -251,7 +251,7 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
         The initial poles guess, if not given, are estimated as
         w*(-loss_ratio + 1j)
     n_iter : optional int, default=3
-        number of iterations to do to calculate the poles, i.e.,
+        number of iterations to do when calculating the poles, i.e.,
         consecutive pole fitting
     initial_poles : optional array, default=None
         The initial pole guess
