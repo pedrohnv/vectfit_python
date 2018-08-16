@@ -2,6 +2,8 @@ Duplication of the [Fast Relaxed Vector-Fitting algorithm](http://www.sintef.no/
 
 This version was inspired by the one made by Phil Reinhold. The changes are mainly of documentation and code organization. There is no auto rescaling of the problem!
 
+AIMrvn seems to have improved the code yet further. Check it out https://github.com/AlMrvn/vectfit_python
+
 Example of use:
 ```
 def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
