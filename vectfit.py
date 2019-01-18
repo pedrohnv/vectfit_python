@@ -21,9 +21,6 @@ and the following papers:
      the Vector Fitting Method", IEEE Microwave and Wireless Components
      Letters, vol. 18, no. 6, pp. 383-385, June 2008.
 
-Version 2 is a modification mainly of naming, code organization
-and documentation by Pedro H. N. Vieira.
-
 A warning about Ill conditioning of the problem may arise. To ignore
 it in your code use
 
@@ -332,6 +329,7 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
     return poles, residues, d, h
 
 if __name__ == '__main__':
+    #example case
     true_poles = np.array([-4500, -41e3,
                            -100 + 5e3j, -100 - 5e3j,
                            -120 + 15e3j, -120 - 15e3j,
