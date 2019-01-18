@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Phil Reinhold
+@authors: Phil Reinhold, Pedro H. N. Vieira and Alexis Morvan
 
 Duplication of the vector fitting algorithm in python
 (http://www.sintef.no/Projectweb/VECTFIT/)
