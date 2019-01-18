@@ -62,9 +62,19 @@ def rational_model(s, poles, residues, d, h):
     ----
     n=1
     """
-    f = lambda x: (residues/(x - poles)).sum() + d + x*h
-    y = np.vectorize(f)
-    return y(s)
+    #f = lambda x: (residues/(x - poles)).sum() + d + x*h
+    #y = np.vectorize(f)
+    #return y(s)
+    if residues.ndim == 1:
+        return sum(r/(s-p) for p, r in zip(poles, residues)) + d + s*h
+    elif residues.ndim == 2:
+        f = np.zeros((len(s), np.shape(residues)[0]), dtype=np.complex64)
+        for k in range(np.shape(residues)[0]):
+            f[:, k] = sum(r/(s-p) for (p, r) in zip(poles, residues[k, :]))
+            f[:, k] += d[k] + s*h[k]  # asymptotic part
+        return f
+    else:
+        ValueError("residues has an unexpected number of dimensions.")
 
 
 def flag_poles(poles, Ns):
@@ -131,8 +141,8 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True,
     A0_list = []
     A1_list = []
     for k in range(Ndim):
-        A0 = np.zeros((Ns, N), dtype=np.complex64)
-        A1 = np.zeros((Ns, N), dtype=np.complex64)
+        A0 = np.zeros((Ns, N), dtype=np.complex128)
+        A1 = np.zeros((Ns, N), dtype=np.complex128)
         for i, p in enumerate(poles):
             if cindex[i] == 0:
                 A0[:, i] = 1/(s - p)
@@ -226,15 +236,16 @@ def fitting_poles(f, s, poles):
     return new_poles
 
 
-def fitting_residues(f, s, poles):
+def fitting_residues(f, s, poles, asymptote='affine'):
     """
-    Calculates the poles of the fitting function.
+    Calculates the residues of the fitting function.
 
     Parameters
     ----------
     f : array of the complex data to fit
     s : complex sampling points of f
-    poles : calculated poles (by fitting _poles)
+    poles : calculated poles (by fitting_poles)
+    asymptote : shape of the asymptote : affine, linear, constant or None
 
     Returns
     -------
@@ -242,26 +253,48 @@ def fitting_residues(f, s, poles):
     d : adjusted offset
     h : adjusted slope
     """
+    try:
+        Ns, Ndim = np.shape(f)
+    except ValueError:
+        Ns = len(s)
+        Ndim = 1
+    print(Ndim)
     N = len(poles)
-    Ns = len(s)
     cindex = flag_poles(poles, Ns)
 
+    if asymptote is None:
+        Ntab = N
+    elif asymptote == 'affine':
+        Ntab = N+2
+    elif asymptote == 'linear' or asymptote == 'constant':
+        Ntab = N+1
+
     # calculates the residues of sigma
-    A, b = residues_equation(f, s, poles, cindex, False)
+    A, b = residues_equation(f, s, poles, cindex, False, asymptote=asymptote)
     # Solve Ax == b using pseudo-inverse
-    x, residuals, rnk, s = np.linalg.lstsq(A, b, rcond=-1)
-
+    x, residuals, _, _ = np.linalg.lstsq(A, b, rcond=-1)
     # Recover complex values
-    x = np.complex64(x)
+    x = np.complex128(x)
     for i, ci in enumerate(cindex):
-       if ci == 1:
-           r1, r2 = x[i:i+2]
-           x[i] = r1 - 1j*r2
-           x[i+1] = r1 + 1j*r2
+        if ci == 1:
+            for k in range(Ndim):
+                r1, r2 = x[Ntab*k+i:Ntab*k+i+2]
+                x[Ntab*k+i] = r1 - 1j*r2
+                x[Ntab*k+i+1] = r1 + 1j*r2
 
-    residues = x[:N]
-    d = x[N].real
-    h = x[N+1].real
+    residues = np.squeeze([x[j*Ntab:j*Ntab+N] for j in range(Ndim)])
+    if asymptote == 'affine':
+        d = [x[Ntab*j + N].real for j in range(Ndim)]
+        h = [x[Ntab*j + N+1].real for j in range(Ndim)]
+    elif asymptote == 'linear':
+        d = [0.]*Ndim
+        h = [x[Ntab*j + N].real for j in range(Ndim)]
+    elif asymptote == 'constant':
+        d = [x[Ntab*j + N].real for j in range(Ndim)]
+        h = [0.]*Ndim
+    elif asymptote is None:
+        d = [0.]*Ndim
+        h = [0.]*Ndim
     return residues, d, h
 
 
