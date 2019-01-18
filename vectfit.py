@@ -62,19 +62,9 @@ def rational_model(s, poles, residues, d, h):
     ----
     n=1
     """
-    #f = lambda x: (residues/(x - poles)).sum() + d + x*h
-    #y = np.vectorize(f)
-    #return y(s)
-    if residues.ndim == 1:
-        return sum(r/(s-p) for p, r in zip(poles, residues)) + d + s*h
-    elif residues.ndim == 2:
-        f = np.zeros((len(s), np.shape(residues)[0]), dtype=np.complex64)
-        for k in range(np.shape(residues)[0]):
-            f[:, k] = sum(r/(s-p) for (p, r) in zip(poles, residues[k, :]))
-            f[:, k] += d[k] + s*h[k]  # asymptotic part
-        return f
-    else:
-        ValueError("residues has an unexpected number of dimensions.")
+    f = lambda x: (residues/(x - poles)).sum() + d + np.dot(x, h)
+    y = np.vectorize(f)
+    return y(s)
 
 
 def flag_poles(poles, Ns):
@@ -395,4 +385,3 @@ if __name__ == '__main__':
     ax.set_ylabel("Magnitude [p.u.]")
     ax.legend(["true", "fitted"])
     plt.show()
-fitted
