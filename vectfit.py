@@ -33,9 +33,11 @@ with warnings.catch_warnings():
     fitted = vector_fitting(f,s)
 ```
 """
-import numpy
+import numpy as np
+from scipy.linalg import block_diag
 import matplotlib.pyplot as plt
 import warnings
+
 
 def rational_model(s, poles, residues, d, h):
     """
@@ -61,8 +63,9 @@ def rational_model(s, poles, residues, d, h):
     n=1
     """
     f = lambda x: (residues/(x - poles)).sum() + d + x*h
-    y = numpy.vectorize(f)
+    y = np.vectorize(f)
     return y(s)
+
 
 def flag_poles(poles, Ns):
     """
@@ -83,7 +86,7 @@ def flag_poles(poles, Ns):
     cindex : identifying array
     """
     N = len(poles)
-    cindex = numpy.zeros(N)
+    cindex = np.zeros(N)
     for i, p in enumerate(poles):
         if p.imag != 0:
             if i == 0 or cindex[i-1] != 1:
@@ -96,7 +99,9 @@ def flag_poles(poles, Ns):
 
     return cindex
 
-def residues_equation(f, s, poles, cindex, sigma_residues=True):
+
+def residues_equation(f, s, poles, cindex, sigma_residues=True,
+                      asymptote='affine'):
     """
     Builds the first linear equation to solve. See Appendix A.
 
@@ -111,39 +116,62 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True):
     f_residues : bool, default=True
         signals if the residues of sigma (True) or f (False) are being
         calculated. The equation is a bit different in each case.
-
+    asymptote : define the asymptotic behavior to be fitted :
+        None, 'linear', 'affine' or 'constant'
     Returns
     -------
     A, b : of the equation Ax = b
     """
-    Ns = len(s)
+    try:
+        Ns, Ndim = np.shape(f)
+    except ValueError:
+        Ns = len(f)
+        Ndim = 1
     N = len(poles)
-    A = numpy.zeros((Ns, 2*N+2), dtype=numpy.complex64)
-    for i, p in enumerate(poles):
-        if cindex[i] == 0:
-            A[:, i] = 1/(s - p)
-        elif cindex[i] == 1:
-            A[:, i] = 1/(s - p) + 1/(s - p.conjugate())
-        elif cindex[i] == 2:
-            A[:, i] = 1j/(s - p) - 1j/(s - p.conjugate())
-        else:
-            raise RuntimeError("cindex[%s] = %s" % (i, cindex[i]))
+    A0_list = []
+    A1_list = []
+    for k in range(Ndim):
+        A0 = np.zeros((Ns, N), dtype=np.complex64)
+        A1 = np.zeros((Ns, N), dtype=np.complex64)
+        for i, p in enumerate(poles):
+            if cindex[i] == 0:
+                A0[:, i] = 1/(s - p)
+            elif cindex[i] == 1:
+                A0[:, i] = 1/(s - p) + 1/(s - p.conjugate())
+            elif cindex[i] == 2:
+                A0[:, i] = 1j/(s - p) - 1j/(s - p.conjugate())
+            else:
+                raise RuntimeError("cindex[%s] = %s" % (i, cindex[i]))
 
-        if sigma_residues:
-            A[:, N+2+i] = -A[:, i]*f
-
-    A[:, N] = 1
-    A[:, N+1] = s
-
-    b = f
-    A = numpy.vstack((A.real, A.imag))
-    b = numpy.concatenate((b.real, b.imag))
-    cA = numpy.linalg.cond(A)
+            if sigma_residues:
+                if Ndim == 1:
+                    A1[:, i] = -A0[:, i]*f
+                else:
+                    A1[:, i] = -A0[:, i]*f[:, k]
+        if asymptote == 'constant':
+            A0 = np.concatenate([A0, np.transpose([np.ones(Ns)])], axis=1)
+        if asymptote == 'affine':
+            A0 = np.concatenate([A0, np.transpose([np.ones(Ns)]),
+                                 np.transpose([s])], axis=1)
+        if asymptote == 'linear':
+            A0 = np.concatenate([A0, np.transpose([s])], axis=1)
+        A0_list.append(A0)
+        A1_list.append(A1)
+    A = np.concatenate([block_diag(*A0_list),
+                       np.concatenate(A1_list, axis=0)], axis=1)
+    if Ndim == 1:
+        b = f
+    else:
+        b = np.hstack([f[:, k] for k in range(Ndim)])
+    A = np.vstack((A.real, A.imag))
+    b = np.concatenate((b.real, b.imag))
+    cA = np.linalg.cond(A)
     if cA > 1e13:
         message = ('Ill Conditioned Matrix. Cond(A) = ' + str(cA)
-                    + ' . Consider scaling the problem down.')
+                   + ' . Consider scaling the problem down.')
         warnings.warn(message, UserWarning)
     return A, b
+
 
 def fitting_poles(f, s, poles):
     """
@@ -168,15 +196,15 @@ def fitting_poles(f, s, poles):
     # calculates the residues of sigma
     A, b = residues_equation(f, s, poles, cindex)
     # Solve Ax == b using pseudo-inverse
-    x, residuals, rnk, s = numpy.linalg.lstsq(A, b, rcond=-1)
+    x, residuals, rnk, s = np.linalg.lstsq(A, b, rcond=-1)
 
     # We only want the "tilde" part in (A.4)
     x = x[-N:]
 
     # Calculation of zeros of sigma, which are equal to the poles
     # of the fitting function: Appendix B
-    A = numpy.diag(poles)
-    b = numpy.ones(N)
+    A = np.diag(poles)
+    b = np.ones(N)
     c = x
     for i, (ci, p) in enumerate(zip(cindex, poles)):
         if ci == 1:
@@ -189,13 +217,14 @@ def fitting_poles(f, s, poles):
             #cv = c[i]
             #c[i,i+1] = real(cv), imag(cv)
 
-    H = A - numpy.outer(b, c)
+    H = A - np.outer(b, c)
     H = H.real
-    eig = numpy.linalg.eigvals(H)
-    new_poles = numpy.sort(eig)
+    eig = np.linalg.eigvals(H)
+    new_poles = np.sort(eig)
     unstable = new_poles.real > 0
     new_poles[unstable] -= 2*new_poles.real[unstable]
     return new_poles
+
 
 def fitting_residues(f, s, poles):
     """
@@ -220,10 +249,10 @@ def fitting_residues(f, s, poles):
     # calculates the residues of sigma
     A, b = residues_equation(f, s, poles, cindex, False)
     # Solve Ax == b using pseudo-inverse
-    x, residuals, rnk, s = numpy.linalg.lstsq(A, b, rcond=-1)
+    x, residuals, rnk, s = np.linalg.lstsq(A, b, rcond=-1)
 
     # Recover complex values
-    x = numpy.complex64(x)
+    x = np.complex64(x)
     for i, ci in enumerate(cindex):
        if ci == 1:
            r1, r2 = x[i:i+2]
@@ -234,6 +263,7 @@ def fitting_residues(f, s, poles):
     d = x[N].real
     h = x[N+1].real
     return residues, d, h
+
 
 def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
                    initial_poles=None):
@@ -262,11 +292,11 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
     """
     w = s.imag
     if initial_poles is None:
-        beta = numpy.linspace(w[0], w[-1], poles_pairs+2)[1:-1]
-        initial_poles = numpy.array([])
-        p = numpy.array([[-loss_ratio + 1j], [-loss_ratio - 1j]])
+        beta = np.linspace(w[0], w[-1], poles_pairs+2)[1:-1]
+        initial_poles = np.array([])
+        p = np.array([[-loss_ratio + 1j], [-loss_ratio - 1j]])
         for b in beta:
-            initial_poles = numpy.append(initial_poles, p*b)
+            initial_poles = np.append(initial_poles, p*b)
 
     poles = initial_poles
     for _ in range(n_iter):
@@ -276,45 +306,46 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
     fitted = lambda s: rational_model(s, poles, residues, d, h)
     return fitted
 
+
 if __name__ == '__main__':
-    true_poles = numpy.array([-4500, -41e3,
-                              -100 + 5e3j, -100 - 5e3j,
-                              -120 + 15e3j, -120 - 15e3j,
-                              -3e3 + 35e3j, -3e3 - 35e3j,
-                              -200 + 45e3j, -200 - 45e3j,
-                              -15e2 + 45e3j, -15e2 - 45e3j,
-                              -500 + 70e3j, -500 - 70e3j,
-                              -1e3 + 73e3j, -1e3 - 73e3j,
-                              -2e3 + 90e3j, -2e3 - 90e3j],
-                             dtype=numpy.complex128)
-    true_residuals = numpy.array([-3e3, -83e3,
-                                  -5 + 7e3j, -5 - 7e3j,
-                                  -20 + 18e3j, -20 - 18e3j,
-                                  6e3 + 45e3j, 6e3 - 45e3j,
-                                  40 + 60e3j, 40 - 60e3j,
-                                  90 + 10e3j, 90 - 10e3j,
-                                  50e3 + 80e3j, 50e3 - 80e3j,
-                                  1e3 + 45e3j, 1e3 - 45e3j,
-                                  -5e3 + 92e3j, -5e3 - 92e3j],
-                                 dtype=numpy.complex128)
+    true_poles = np.array([-4500, -41e3,
+                           -100 + 5e3j, -100 - 5e3j,
+                           -120 + 15e3j, -120 - 15e3j,
+                           -3e3 + 35e3j, -3e3 - 35e3j,
+                           -200 + 45e3j, -200 - 45e3j,
+                           -15e2 + 45e3j, -15e2 - 45e3j,
+                           -500 + 70e3j, -500 - 70e3j,
+                           -1e3 + 73e3j, -1e3 - 73e3j,
+                           -2e3 + 90e3j, -2e3 - 90e3j],
+                          dtype=np.complex128)
+    true_residuals = np.array([-3e3, -83e3,
+                               -5 + 7e3j, -5 - 7e3j,
+                               -20 + 18e3j, -20 - 18e3j,
+                               6e3 + 45e3j, 6e3 - 45e3j,
+                               40 + 60e3j, 40 - 60e3j,
+                               90 + 10e3j, 90 - 10e3j,
+                               50e3 + 80e3j, 50e3 - 80e3j,
+                               1e3 + 45e3j, 1e3 - 45e3j,
+                               -5e3 + 92e3j, -5e3 - 92e3j],
+                              dtype=np.complex128)
     true_d = -2e-12
     true_h = -5e-18
 
-    freq = numpy.logspace(0, 5, 200)
-    s = 2j*numpy.pi*freq
+    freq = np.logspace(0, 5, 200)
+    s = 2j*np.pi*freq
     true_f = rational_model(s, true_poles, true_residuals, true_d, true_h)
 
-    initial_poles = numpy.array([-1e-2 + 1j, -1e-2 - 1j,
-                                 -1.11e2 + 1.11e4j, -1.11e2 - 1.11e4j,
-                                 -2.22e2 + 2.22e4j, -2.22e2 - 2.22e4j,
-                                 -3.33e2 + 3.33e4j, -3.33e2 - 3.33e4j,
-                                 -4.44e2 + 4.44e4j, -4.44e2 - 4.44e4j,
-                                 -5.55e2 + 5.55e4j, -5.55e2 - 5.55e4j,
-                                 -6.66e2 + 6.66e4j, -6.66e2 - 6.66e4j,
-                                 -7.77e2 + 7.77e4j, -7.77e2 - 7.77e4j,
-                                 -8.88e2 + 8.88e4j, -8.88e2 - 8.88e4j,
-                                 -1e3 + 1e5j, -1e3 - 1e5j],
-                                dtype=numpy.complex128)
+    initial_poles = np.array([-1e-2 + 1j, -1e-2 - 1j,
+                              -1.11e2 + 1.11e4j, -1.11e2 - 1.11e4j,
+                              -2.22e2 + 2.22e4j, -2.22e2 - 2.22e4j,
+                              -3.33e2 + 3.33e4j, -3.33e2 - 3.33e4j,
+                              -4.44e2 + 4.44e4j, -4.44e2 - 4.44e4j,
+                              -5.55e2 + 5.55e4j, -5.55e2 - 5.55e4j,
+                              -6.66e2 + 6.66e4j, -6.66e2 - 6.66e4j,
+                              -7.77e2 + 7.77e4j, -7.77e2 - 7.77e4j,
+                              -8.88e2 + 8.88e4j, -8.88e2 - 8.88e4j,
+                              -1e3 + 1e5j, -1e3 - 1e5j],
+                             dtype=np.complex128)
 
 #    poles = fitting_poles(test_f, s, initial_poles)
 #    residues, d, h = fitting_residues(test_f, s, poles)
@@ -324,8 +355,8 @@ if __name__ == '__main__':
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(freq/1e3, numpy.abs(true_f))
-    ax.plot(freq/1e3, numpy.abs(fitted), 'x')
+    ax.plot(freq/1e3, np.abs(true_f))
+    ax.plot(freq/1e3, np.abs(fitted), 'x')
     ax.set_xlabel("f [kHz]")
     ax.set_ylabel("Magnitude [p.u.]")
     ax.legend(["true", "fitted"])
