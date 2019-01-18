@@ -2,10 +2,10 @@
 """
 @author: Phil Reinhold
 
-Duplication of the vector fitting algorithm in python 
+Duplication of the vector fitting algorithm in python
 (http://www.sintef.no/Projectweb/VECTFIT/)
 
-All credit goes to Bjorn Gustavsen for his MATLAB implementation, 
+All credit goes to Bjorn Gustavsen for his MATLAB implementation,
 and the following papers:
 
  [1] B. Gustavsen and A. Semlyen, "Rational approximation of frequency
@@ -20,7 +20,7 @@ and the following papers:
      "Macromodeling of Multiport Systems Using a Fast Implementation of
      the Vector Fitting Method", IEEE Microwave and Wireless Components
      Letters, vol. 18, no. 6, pp. 383-385, June 2008.
-     
+
 Version 2 is a modification mainly of naming, code organization
 and documentation by Pedro H. N. Vieira.
 
@@ -40,7 +40,7 @@ import warnings
 def rational_model(s, poles, residues, d, h):
     """
     Complex rational function.
-    
+
     Parameters
     ----------
     s : array of complex frequencies.
@@ -48,7 +48,7 @@ def rational_model(s, poles, residues, d, h):
     residues : array of the rn
     d : real, offset
     h : real, slope
-    
+
     Returns
     -------
      N
@@ -70,14 +70,14 @@ def flag_poles(poles, Ns):
         0 : real
         1 : complex
         2 : complex.conjugate()
-        
+
     Parameters
     ----------
     poles : initial poles guess
         note: All complex poles must come in sequential complex
         conjugate pairs
     Ns : number of samples being used (s.size)
-    
+
     Returns
     -------
     cindex : identifying array
@@ -93,13 +93,13 @@ def flag_poles(poles, Ns):
                 cindex[i] = 1
             else:
                 cindex[i] = 2
-                
+
     return cindex
 
 def residues_equation(f, s, poles, cindex, sigma_residues=True):
     """
     Builds the first linear equation to solve. See Appendix A.
-    
+
     Parameters
     ----------
     f : array of the complex data to fit
@@ -111,7 +111,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True):
     f_residues : bool, default=True
         signals if the residues of sigma (True) or f (False) are being
         calculated. The equation is a bit different in each case.
-    
+
     Returns
     -------
     A, b : of the equation Ax = b
@@ -128,7 +128,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True):
             A[:, i] = 1j/(s - p) - 1j/(s - p.conjugate())
         else:
             raise RuntimeError("cindex[%s] = %s" % (i, cindex[i]))
-        
+
         if sigma_residues:
             A[:, N+2+i] = -A[:, i]*f
 
@@ -140,7 +140,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True):
     b = numpy.concatenate((b.real, b.imag))
     cA = numpy.linalg.cond(A)
     if cA > 1e13:
-        message = ('Ill Conditioned Matrix. Cond(A) = ' + str(cA) 
+        message = ('Ill Conditioned Matrix. Cond(A) = ' + str(cA)
                     + ' . Consider scaling the problem down.')
         warnings.warn(message, UserWarning)
     return A, b
@@ -148,7 +148,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True):
 def fitting_poles(f, s, poles):
     """
     Calculates the poles of the fitting function.
-    
+
     Parameters
     ----------
     f : array of the complex data to fit
@@ -156,7 +156,7 @@ def fitting_poles(f, s, poles):
     poles : initial poles guess
         note: All complex poles must come in sequential complex
         conjugate pairs
-    
+
     Returns
     -------
     new_poles : adjusted poles
@@ -200,13 +200,13 @@ def fitting_poles(f, s, poles):
 def fitting_residues(f, s, poles):
     """
     Calculates the poles of the fitting function.
-    
+
     Parameters
     ----------
     f : array of the complex data to fit
     s : complex sampling points of f
     poles : calculated poles (by fitting _poles)
-    
+
     Returns
     -------
     residues : adjusted residues
@@ -239,7 +239,7 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
                    initial_poles=None):
     """
     Makes the vector fitting of a complex function.
-    
+
     Parameters
     ----------
     f : array of the complex data to fit
@@ -255,7 +255,7 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
         consecutive pole fitting
     initial_poles : optional array, default=None
         The initial pole guess
-    
+
     Returns
     -------
     fitted(s) : the fitted function with 's' as parameter
@@ -267,60 +267,66 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
         p = numpy.array([[-loss_ratio + 1j], [-loss_ratio - 1j]])
         for b in beta:
             initial_poles = numpy.append(initial_poles, p*b)
-        
+
     poles = initial_poles
     for _ in range(n_iter):
         poles = fitting_poles(f, s, poles)
-        
+
     residues, d, h = fitting_residues(f, s, poles)
     fitted = lambda s: rational_model(s, poles, residues, d, h)
     return fitted
 
-def test():
+if __name__ == '__main__':
     true_poles = numpy.array([-4500, -41e3,
-                     -100 + 5e3j, -100 - 5e3j,
-                     -120 + 15e3j, -120 - 15e3j,
-                     -3e3 + 35e3j, -3e3 - 35e3j,
-                     -200 + 45e3j, -200 - 45e3j,
-                     -15e2 + 45e3j, -15e2 - 45e3j,
-                     -500 + 70e3j, -500 - 70e3j,
-                     -1e3 + 73e3j, -1e3 - 73e3j,
-                     -2e3 + 90e3j, -2e3 - 90e3j])
+                              -100 + 5e3j, -100 - 5e3j,
+                              -120 + 15e3j, -120 - 15e3j,
+                              -3e3 + 35e3j, -3e3 - 35e3j,
+                              -200 + 45e3j, -200 - 45e3j,
+                              -15e2 + 45e3j, -15e2 - 45e3j,
+                              -500 + 70e3j, -500 - 70e3j,
+                              -1e3 + 73e3j, -1e3 - 73e3j,
+                              -2e3 + 90e3j, -2e3 - 90e3j],
+                             dtype=numpy.complex128)
     true_residuals = numpy.array([-3e3, -83e3,
-                        -5 + 7e3j, -5 - 7e3j,
-                        -20 + 18e3j, -20 - 18e3j,
-                        6e3 + 45e3j, 6e3 - 45e3j,
-                        40 + 60e3j, 40 - 60e3j,
-                        90 + 10e3j, 90 - 10e3j,
-                        50e3 + 80e3j, 50e3 - 80e3j,
-                        1e3 + 45e3j, 1e3 - 45e3j,
-                        -5e3 + 92e3j, -5e3 - 92e3j])
+                                  -5 + 7e3j, -5 - 7e3j,
+                                  -20 + 18e3j, -20 - 18e3j,
+                                  6e3 + 45e3j, 6e3 - 45e3j,
+                                  40 + 60e3j, 40 - 60e3j,
+                                  90 + 10e3j, 90 - 10e3j,
+                                  50e3 + 80e3j, 50e3 - 80e3j,
+                                  1e3 + 45e3j, 1e3 - 45e3j,
+                                  -5e3 + 92e3j, -5e3 - 92e3j],
+                                 dtype=numpy.complex128)
     true_d = -2e-12
     true_h = -5e-18
-    s = 1j*numpy.linspace(0, 100e3, 200)
-    test_f = rational_model(s, true_poles, true_residuals, true_d,
-                            true_h)
-    
+
+    freq = numpy.logspace(0, 5, 200)
+    s = 2j*numpy.pi*freq
+    true_f = rational_model(s, true_poles, true_residuals, true_d, true_h)
+
     initial_poles = numpy.array([-1e-2 + 1j, -1e-2 - 1j,
-                              -1.11e2 + 1.11e4j, -1.11e2 - 1.11e4j,
-                              -2.22e2 + 2.22e4j, -2.22e2 - 2.22e4j,
-                              -3.33e2 + 3.33e4j, -3.33e2 - 3.33e4j,
-                              -4.44e2 + 4.44e4j, -4.44e2 - 4.44e4j,
-                              -5.55e2 + 5.55e4j, -5.55e2 - 5.55e4j,
-                              -6.66e2 + 6.66e4j, -6.66e2 - 6.66e4j,
-                              -7.77e2 + 7.77e4j, -7.77e2 - 7.77e4j,
-                              -8.88e2 + 8.88e4j, -8.88e2 - 8.88e4j,
-                              -1e3 + 1e5j, -1e3 - 1e5j])
-    
+                                 -1.11e2 + 1.11e4j, -1.11e2 - 1.11e4j,
+                                 -2.22e2 + 2.22e4j, -2.22e2 - 2.22e4j,
+                                 -3.33e2 + 3.33e4j, -3.33e2 - 3.33e4j,
+                                 -4.44e2 + 4.44e4j, -4.44e2 - 4.44e4j,
+                                 -5.55e2 + 5.55e4j, -5.55e2 - 5.55e4j,
+                                 -6.66e2 + 6.66e4j, -6.66e2 - 6.66e4j,
+                                 -7.77e2 + 7.77e4j, -7.77e2 - 7.77e4j,
+                                 -8.88e2 + 8.88e4j, -8.88e2 - 8.88e4j,
+                                 -1e3 + 1e5j, -1e3 - 1e5j],
+                                dtype=numpy.complex128)
+
 #    poles = fitting_poles(test_f, s, initial_poles)
 #    residues, d, h = fitting_residues(test_f, s, poles)
 #    fitted = rational_model(s, poles, residues, d, h)
-    fitted = vector_fitting(test_f, s, initial_poles=initial_poles)
+    fitted = vector_fitting(true_f, s, initial_poles=initial_poles)
     fitted = fitted(s)
-    
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(s.imag/1e3, abs(test_f))
-    ax.plot(s.imag/1e3, abs(fitted), 'x')
-    ax.set_xlabel("kHz")
+    ax.plot(freq/1e3, numpy.abs(true_f))
+    ax.plot(freq/1e3, numpy.abs(fitted), 'x')
+    ax.set_xlabel("f [kHz]")
+    ax.set_ylabel("Magnitude [p.u.]")
     ax.legend(["true", "fitted"])
+    plt.show()
