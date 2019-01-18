@@ -299,7 +299,7 @@ def fitting_residues(f, s, poles, asymptote='affine'):
 
 
 def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
-                   initial_poles=None):
+                   initial_poles=None, asymptote='affine'):
     """
     Makes the vector fitting of a complex function.
 
@@ -321,7 +321,10 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
 
     Returns
     -------
-    fitted(s) : the fitted function with 's' as parameter
+    poles : adjusted poles
+    residues : adjusted residues
+    d : adjusted offset
+    h : adjusted slope
     """
     w = s.imag
     if initial_poles is None:
@@ -333,12 +336,10 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
 
     poles = initial_poles
     for _ in range(n_iter):
-        poles = fitting_poles(f, s, poles)
+        poles = fitting_poles(f, s, poles, asymptote=asymptote)
 
-    residues, d, h = fitting_residues(f, s, poles)
-    fitted = lambda s: rational_model(s, poles, residues, d, h)
-    return fitted
-
+    residues, d, h = fitting_residues(f, s, poles, asymptote=asymptote)
+    return poles, residues, d, h
 
 if __name__ == '__main__':
     true_poles = np.array([-4500, -41e3,
