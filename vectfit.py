@@ -350,8 +350,10 @@ if __name__ == '__main__':
                                1e3 + 45e3j, 1e3 - 45e3j,
                                -5e3 + 92e3j, -5e3 - 92e3j],
                               dtype=np.complex128)
-    true_d = -2e-12
-    true_h = -5e-18
+    #true_residuals = true_residuals.real + true_residuals.imag*2*np.pi
+    #true_poles = true_poles.real + true_poles.imag*2*np.pi
+    true_d = 0.2
+    true_h = 2e-5
 
     freq = np.logspace(0, 5, 200)
     s = 2j*np.pi*freq
@@ -377,8 +379,9 @@ if __name__ == '__main__':
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
+    ax.set_xscale("log")
     ax.plot(freq/1e3, np.abs(true_f))
-    ax.plot(freq/1e3, np.abs(fitted_f), 'x')
+    ax.plot(freq/1e3, np.abs(fitted_f), '--')
     ax.set_xlabel("f [kHz]")
     ax.set_ylabel("Magnitude [p.u.]")
     ax.legend(["true", "fitted"])
