@@ -183,7 +183,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True,
     return A, b
 
 
-def fitting_poles(f, s, poles):
+def fitting_poles(f, s, poles, asymptote='affine'):
     """
     Calculates the poles of the fitting function.
 
@@ -384,14 +384,15 @@ if __name__ == '__main__':
 #    poles = fitting_poles(test_f, s, initial_poles)
 #    residues, d, h = fitting_residues(test_f, s, poles)
 #    fitted = rational_model(s, poles, residues, d, h)
-    fitted = vector_fitting(true_f, s, initial_poles=initial_poles)
-    fitted = fitted(s)
+    poles, residues, d, h = vector_fitting(true_f, s, asymptote=None)
+    fitted_f = rational_model(s, poles, residues, d, h)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(freq/1e3, np.abs(true_f))
-    ax.plot(freq/1e3, np.abs(fitted), 'x')
+    ax.plot(freq/1e3, np.abs(fitted_f), 'x')
     ax.set_xlabel("f [kHz]")
     ax.set_ylabel("Magnitude [p.u.]")
     ax.legend(["true", "fitted"])
     plt.show()
+fitted
