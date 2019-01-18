@@ -60,7 +60,7 @@ def rational_model(s, poles, residues, d, h):
     ----
     n=1
     """
-    f = lambda s: (residues/(s - poles)).sum() + d + s*h
+    f = lambda x: (residues/(x - poles)).sum() + d + x*h
     y = numpy.vectorize(f)
     return y(s)
 
@@ -261,7 +261,7 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
     fitted(s) : the fitted function with 's' as parameter
     """
     w = s.imag
-    if initial_poles == None:
+    if initial_poles is None:
         beta = numpy.linspace(w[0], w[-1], poles_pairs+2)[1:-1]
         initial_poles = numpy.array([])
         p = numpy.array([[-loss_ratio + 1j], [-loss_ratio - 1j]])
