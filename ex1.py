@@ -1,3 +1,17 @@
+"""
+ ex1.py
+
+ Fitting an artificially created frequency response (single element)
+
+ -Creating a 3rd order frequency response f(s)
+    -Initial poles: 3 logarithmically spaced real poles
+    -1 iteration
+
+ This example script is a translation to Python from the one that is
+ part of the vector fitting package (VFIT3.zip)
+
+ Created by:   Bjorn Gustavsen.
+"""
 from vectfit import *
 import numpy as np
 #Frequency samples:
@@ -6,11 +20,11 @@ freq = np.logspace(0,4,Ns)
 s = 2j*np.pi*freq
 
 true_poles = np.array([-5 + 0j, -100 + 500j, -100 - 500j], dtype=np.complex64)
-true_residuals = np.array([2, 30 + 40j, 30 - 40j], dtype=np.complex64)
+true_residues = np.array([2, 30 + 40j, 30 - 40j], dtype=np.complex64)
 true_d = 0.5
 true_h = 0.
 
-true_f = rational_model(s, true_poles, true_residuals, true_d, true_h)
+true_f = rational_model(s, true_poles, true_residues, true_d, true_h)
 
 #Initial poles for Vector Fitting:
 N = 3 #order of approximation

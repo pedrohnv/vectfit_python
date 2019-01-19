@@ -193,7 +193,7 @@ def fitting_poles(f, s, poles, asymptote='affine'):
     # calculates the residues of sigma
     A, b = residues_equation(f, s, poles, cindex)
     # Solve Ax == b using pseudo-inverse
-    x, residuals, rnk, s = np.linalg.lstsq(A, b, rcond=-1)
+    x, residues, rnk, s = np.linalg.lstsq(A, b, rcond=-1)
 
     # We only want the "tilde" part in (A.4)
     x = x[-N:]
@@ -259,7 +259,7 @@ def fitting_residues(f, s, poles, asymptote='affine'):
     # calculates the residues of sigma
     A, b = residues_equation(f, s, poles, cindex, False, asymptote=asymptote)
     # Solve Ax == b using pseudo-inverse
-    x, residuals, _, _ = np.linalg.lstsq(A, b, rcond=-1)
+    x, residues, _, _ = np.linalg.lstsq(A, b, rcond=-1)
     # Recover complex values
     x = np.complex128(x)
     for i, ci in enumerate(cindex):
@@ -340,7 +340,7 @@ if __name__ == '__main__':
                            -1e3 + 73e3j, -1e3 - 73e3j,
                            -2e3 + 90e3j, -2e3 - 90e3j],
                           dtype=np.complex128)
-    true_residuals = np.array([-3e3, -83e3,
+    true_residues = np.array([-3e3, -83e3,
                                -5 + 7e3j, -5 - 7e3j,
                                -20 + 18e3j, -20 - 18e3j,
                                6e3 + 45e3j, 6e3 - 45e3j,
@@ -350,14 +350,14 @@ if __name__ == '__main__':
                                1e3 + 45e3j, 1e3 - 45e3j,
                                -5e3 + 92e3j, -5e3 - 92e3j],
                               dtype=np.complex128)
-    #true_residuals = true_residuals.real + true_residuals.imag*2*np.pi
+    #true_residues = true_residues.real + true_residues.imag*2*np.pi
     #true_poles = true_poles.real + true_poles.imag*2*np.pi
     true_d = 0.2
     true_h = 2e-5
 
     freq = np.logspace(0, 5, 200)
     s = 2j*np.pi*freq
-    true_f = rational_model(s, true_poles, true_residuals, true_d, true_h)
+    true_f = rational_model(s, true_poles, true_residues, true_d, true_h)
 
     initial_poles = np.array([-1e-2 + 1j, -1e-2 - 1j,
                               -1.11e2 + 1.11e4j, -1.11e2 - 1.11e4j,
