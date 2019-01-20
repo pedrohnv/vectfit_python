@@ -50,21 +50,22 @@ for n in range(bet.size):
     poles[i + 1] = (alf + 1j*bet[n])
     i += 2
 
-Niter = 5
-fitted_f = f
-for i in range(Niter):
-     poles, residues, d, h = vector_fitting(fitted_f, s, initial_poles=poles)
-     fitted_f = rational_model(s, poles, residues, d, h)
 
+Niter = 5
+for i in range(Niter):
+    poles, residues, d, h = vector_fitting(f, s, initial_poles=poles)
+
+
+fitted_f = rational_model(s, poles, residues, d, h)
 
 # PLOT
 fig1 = plt.figure(1)
 ax1 = fig1.add_subplot(111)
 #ax1.set_xscale("log")
 ax1.set_yscale("log")
-ax1.plot(w/(2*np.pi)/1e3, np.abs(f))
-ax1.plot(w/(2*np.pi)/1e3, np.abs(fitted_f))
-ax1.plot(w/(2*np.pi)/1e3, np.abs(fitted_f - f))
+ax1.plot(w/(2*np.pi)/1e3, np.abs(f), 'b-')
+ax1.plot(w/(2*np.pi)/1e3, np.abs(fitted_f), 'r-')
+ax1.plot(w/(2*np.pi)/1e3, np.abs(fitted_f - f), 'g--')
 ax1.set_xlabel("f [kHz]")
 ax1.set_ylabel("Magnitude [p.u.]")
 ax1.legend(["true", "fitted", "deviation"])

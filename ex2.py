@@ -86,21 +86,27 @@ for n in range(bet.size):
 # Real starting poles :
 #poles = -np.linspace(w[0], w[Ns-1], N);
 
-true_f = rational_model(s, p, r, d, h)
-fitted_f = true_f
 Niter = 3
 for i in range(Niter):
-     poles, residues, d, h = vector_fitting(fitted_f, s, initial_poles=poles)
-     fitted_f = rational_model(s, poles, residues, d, h)
+    poles, residues, d, h = vector_fitting(f, s, initial_poles=poles)
+
+
+fitted_f = rational_model(s, poles, residues, d, h)
 
 # PLOT
 fig1 = plt.figure(1)
 ax1 = fig1.add_subplot(111)
 #ax1.set_xscale("log")
 ax1.set_yscale("log")
-ax1.plot(freq/1e3, np.abs(true_f))
-ax1.plot(freq/1e3, np.abs(fitted_f))
-ax1.plot(freq/1e3, np.abs(fitted_f - true_f))
+
+ax1.plot(freq/1e3, np.abs(f[0,:]), 'b-')
+ax1.plot(freq/1e3, np.abs(fitted_f[0,:]), 'r--')
+ax1.plot(freq/1e3, np.abs(fitted_f - f)[0,:], 'g-')
+
+ax1.plot(freq/1e3, np.abs(f[1,:]), 'b-')
+ax1.plot(freq/1e3, np.abs(fitted_f[1,:]), 'r--')
+ax1.plot(freq/1e3, np.abs(fitted_f - f)[1,:], 'g-')
+
 ax1.set_xlabel("f [kHz]")
 ax1.set_ylabel("Magnitude [p.u.]")
 ax1.legend(["true", "fitted", "deviation"])
