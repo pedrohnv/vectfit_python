@@ -170,7 +170,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True,
     return A, b
 
 
-def fitting_poles(f, s, poles, asymptote='affine'):
+def get_poles(f, s, poles, asymptote='affine'):
     """
     Calculates the poles of the fitting function.
 
@@ -223,7 +223,7 @@ def fitting_poles(f, s, poles, asymptote='affine'):
     return new_poles
 
 
-def fitting_residues(f, s, poles, asymptote='affine'):
+def get_residues(f, s, poles, asymptote='affine'):
     """
     Calculates the residues of the fitting function.
 
@@ -231,7 +231,7 @@ def fitting_residues(f, s, poles, asymptote='affine'):
     ----------
     f : array of the complex data to fit
     s : complex sampling points of f
-    poles : calculated poles (by fitting_poles)
+    poles : calculated poles (by get_poles)
     asymptote : shape of the asymptote : affine, linear, constant or None
 
     Returns
@@ -323,10 +323,51 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
 
     poles = initial_poles
     for _ in range(n_iter):
-        poles = fitting_poles(f, s, poles, asymptote=asymptote)
+        poles = get_poles(f, s, poles, asymptote=asymptote)
 
-    residues, d, h = fitting_residues(f, s, poles, asymptote=asymptote)
+    residues, d, h = get_residues(f, s, poles, asymptote=asymptote)
+    return poles, residues, np.array(d), np.array(h)
+
+
+def vectfit_auto_rescale(f, s, **kwargs):
+    """
+    Makes the vector fitting of a complex function with auto rescaling.
+
+    Parameters
+    ----------
+    f : array of the complex data to fit
+    s : complex sampling points of f
+    poles_pairs : optional int, default=10
+        number of conjugate pairs of the fitting function.
+        Only used if initial_poles=None
+    loss_ratio : optional float, default=0.01
+        The initial poles guess, if not given, are estimated as
+        w*(-loss_ratio + 1j)
+    n_iter : optional int, default=3
+        number of iterations to do when calculating the poles, i.e.,
+        consecutive pole fitting
+    initial_poles : optional array, default=None
+        The initial pole guess
+
+    Returns
+    -------
+    poles : adjusted poles
+    residues : adjusted residues
+    d : adjusted offset
+    h : adjusted slope
+    """
+    s_scale = abs(s[-1])
+    f_scale = max(abs(f))
+    poles_s, residues_s, d_s, h_s = vector_fitting(f / f_scale, s / s_scale,
+                                                   **kwargs)
+    # rescaling :
+    poles = poles_s * s_scale
+    scale_res = np.vectorize(lambda res: res * f_scale * s_scale)
+    residues = scale_res(residues_s)
+    d = d_s * f_scale
+    h = h_s * f_scale / s_scale
     return poles, residues, d, h
+
 
 if __name__ == '__main__':
     #example case
@@ -371,8 +412,8 @@ if __name__ == '__main__':
                               -1e3 + 1e5j, -1e3 - 1e5j],
                              dtype=np.complex128)
 
-#    poles = fitting_poles(test_f, s, initial_poles)
-#    residues, d, h = fitting_residues(test_f, s, poles)
+#    poles = get_poles(test_f, s, initial_poles)
+#    residues, d, h = get_residues(test_f, s, poles)
 #    fitted = rational_model(s, poles, residues, d, h)
     poles, residues, d, h = vector_fitting(true_f, s, asymptote=None)
     fitted_f = rational_model(s, poles, residues, d, h)
