@@ -1,15 +1,18 @@
-# ex3.m
-#
-# Fitting a measured admittance function from distribution transformer
-# (single element)
-#
-# -Reading frequency response f(s) from disk. (contains 1 element)
-# -Fitting f(s) using vectfit3.m
-#   -Initial poles: 3 linearly spaced complex pairs (N=6)
-#   -3 iterations
-#
-# Created by:   Bjorn Gustavsen.
-#
+"""
+ ex3.py
+
+ Fitting a measured admittance function from distribution transformer
+ (single element)
+
+ -Reading frequency response f(s) from disk. (contains 1 element)
+ -Fitting f(s) using vectfit3.m
+   -Initial poles: 3 linearly spaced complex pairs (N=6)
+   -3 iterations
+
+   This example script is a translation to Python from the one that is
+   part of the vector fitting package (VFIT3.zip)
+ Created by:   Bjorn Gustavsen.
+"""
 from vectfit import *
 import numpy as np
 

@@ -1,5 +1,5 @@
 """
- ex2.m
+ ex2.py
 
  -Creating an 18th order frequency response f(s) of 2 elements.
  -Fitting f(s) using vectfit3.m
