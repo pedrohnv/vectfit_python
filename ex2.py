@@ -49,24 +49,25 @@ N1 = p1.size
 p2 = p[8:17]
 r2 = r[8:17]
 N2 = p2.size
-f = np.zeros((2,Ns), dtype=np.complex64)
+f = np.zeros((Ns,2), dtype=np.complex64)
 
 for k in range(Ns):
     for n in range(N1):
-        f[0,k] = f[0,k] + r1[n]/(s[k] - p1[n])
+        f[k,0] = f[k,0] + r1[n]/(s[k] - p1[n])
 
-    f[0,k] = f[0,k] + s[k]*h
+    f[k,0] = f[k,0] + s[k]*h
 
-f[0,:] = f[0,:] + d
+f[:,0] = f[:,0] + d
 
 
 for k in range(Ns):
     for n in range(N2):
-        f[1,k] = f[1,k] + r2[n]/(s[k] - p2[n])
+        f[k,1] = f[k,1] + r2[n]/(s[k] - p2[n])
 
-    f[1,k] = f[1,k] + s[k]*3*h
+    f[k,1] = f[k,1] + s[k]*3*h
 
-f[0,:] = f[0,:] + 2*d
+#f[:,0] = f[:,0] + 2*d #how it was in ex2.m: bug?
+f[:,1] = f[:,1] + 2*d
 
 #=========================================
 # Rational function approximation of f(s):
@@ -91,7 +92,8 @@ for i in range(Niter):
     poles, residues, d, h = vector_fitting(f, s, initial_poles=poles)
 
 
-fitted_f = rational_model(s, poles, residues, d, h)
+f1 = rational_model(s, poles, residues[0], d[0], h[0])
+f2 = rational_model(s, poles, residues[1], d[1], h[1])
 
 # PLOT
 fig1 = plt.figure(1)
@@ -99,13 +101,13 @@ ax1 = fig1.add_subplot(111)
 #ax1.set_xscale("log")
 ax1.set_yscale("log")
 
-ax1.plot(freq/1e3, np.abs(f[0,:]), 'b-')
-ax1.plot(freq/1e3, np.abs(fitted_f[0,:]), 'r--')
-ax1.plot(freq/1e3, np.abs(fitted_f - f)[0,:], 'g-')
+ax1.plot(freq/1e3, np.abs(f[:,0]), 'b-')
+ax1.plot(freq/1e3, np.abs(f1), 'r--')
+ax1.plot(freq/1e3, np.abs(f[:,0] - f1), 'g-')
 
-ax1.plot(freq/1e3, np.abs(f[1,:]), 'b-')
-ax1.plot(freq/1e3, np.abs(fitted_f[1,:]), 'r--')
-ax1.plot(freq/1e3, np.abs(fitted_f - f)[1,:], 'g-')
+ax1.plot(freq/1e3, np.abs(f[:,1]), 'b-')
+ax1.plot(freq/1e3, np.abs(f2), 'r--')
+ax1.plot(freq/1e3, np.abs(f[:,1] - f2), 'g-')
 
 ax1.set_xlabel("f [kHz]")
 ax1.set_ylabel("Magnitude [p.u.]")

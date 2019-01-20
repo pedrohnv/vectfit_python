@@ -122,9 +122,9 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True,
     try:
         Ns, Ndim = np.shape(f)
     except ValueError:
-        Ns = len(f)
+        Ns = s.size
         Ndim = 1
-    N = len(poles)
+    N = poles.size
     A0_list = []
     A1_list = []
     for k in range(Ndim):
