@@ -91,6 +91,13 @@ foo = lambda i: rational_model(s, poles, residues[i], d[i], h[i])
 f1 = foo(0)
 f2 = foo(1)
 
+print("rmserr =")
+Nc = 2
+for i in range(Nc):
+    diff = foo(i) - f[i]
+    rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(diff) ))) )/np.sqrt(Nc*Ns)
+    print("       ", rmserr)
+
 # PLOT
 fig1 = plt.figure(1)
 ax1 = fig1.add_subplot(111)

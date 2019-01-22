@@ -56,6 +56,11 @@ poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter,
                                        auto_rescale=True)
 fitted_f = rational_model(s, poles, residues, d, h)
 
+diff = fitted_f - f
+Nc = 1
+rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(diff) ))) )/np.sqrt(Nc*Ns)
+print("rmserr =", rmserr)
+
 # PLOT
 fig1 = plt.figure(1)
 ax1 = fig1.add_subplot(111)
@@ -63,7 +68,7 @@ ax1 = fig1.add_subplot(111)
 ax1.set_yscale("log")
 ax1.plot(w/(2*np.pi)/1e3, np.abs(f), 'b-')
 ax1.plot(w/(2*np.pi)/1e3, np.abs(fitted_f), 'r-')
-ax1.plot(w/(2*np.pi)/1e3, np.abs(fitted_f - f), 'g--')
+ax1.plot(w/(2*np.pi)/1e3, np.abs(diff), 'g--')
 ax1.set_xlabel("f [kHz]")
 ax1.set_ylabel("Magnitude [p.u.]")
 ax1.legend(["true", "fitted", "deviation"])

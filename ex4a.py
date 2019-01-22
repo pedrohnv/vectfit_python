@@ -64,6 +64,12 @@ fitted_f = np.zeros(f.shape, dtype=np.complex64)
 for i in range(Nc):
     fitted_f[i] = rational_model(s, poles, residues[i], d[i], h[i])
 
+print("rmserr =")
+for i in range(Nc):
+    diff = fitted_f[i] - f[i]
+    rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(diff) ))) )/np.sqrt(Nc*Ns)
+    print("       ", rmserr)
+
 freq = (w/(2*np.pi)/1e3).real
 # PLOT
 fig1 = plt.figure(1)

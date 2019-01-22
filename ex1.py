@@ -33,6 +33,11 @@ inpoles = -2*np.pi*np.logspace(0,4,N) #Initial poles
 poles, residues, d, h = vector_fitting(true_f, s, initial_poles=inpoles)
 fitted_f = rational_model(s, poles, residues, d, h)
 
+diff = fitted_f - true_f
+Nc = 1
+rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(diff) ))) )/np.sqrt(Nc*Ns)
+print("rmserr =", rmserr)
+
 # PLOT
 fig1 = plt.figure(1)
 ax1 = fig1.add_subplot(111)
@@ -40,7 +45,7 @@ ax1.set_xscale("log")
 ax1.set_yscale("log")
 ax1.plot(freq/1e3, np.abs(true_f))
 ax1.plot(freq/1e3, np.abs(fitted_f))
-ax1.plot(freq/1e3, np.abs(fitted_f - true_f))
+ax1.plot(freq/1e3, np.abs(diff))
 ax1.set_xlabel("f [kHz]")
 ax1.set_ylabel("Magnitude [p.u.]")
 ax1.legend(["true", "fitted", "deviation"])

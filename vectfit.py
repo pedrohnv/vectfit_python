@@ -319,6 +319,7 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
     d : adjusted offset array (Nf,)
     h : adjusted slope array (Nf,)
     """
+    #TODO include weighting
     try:
         Nf, Ns = f.shape
     except ValueError:
