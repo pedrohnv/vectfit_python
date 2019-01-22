@@ -327,7 +327,6 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
 
     if auto_rescale:
         s_scale = abs(s[-1])
-        f_scale = np.max(np.abs(f))
         if Nf > 1:
             f_scale = np.ones(Nf, dtype=np.complex128)
             for i in range(Nf):
@@ -336,10 +335,7 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
             f_scale = np.max(np.abs(f))
     else:
         s_scale = 1
-        if Nf > 1:
-            f_scale = np.ones(Nf)
-        else:
-            f_scale = 1
+        f_scale = np.ones(Nf)
 
     s = s/s_scale
     if Nf > 1:
@@ -352,10 +348,13 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
     w = s.imag
     if initial_poles is None:
         beta = np.linspace(w[0], w[-1], poles_pairs+2)[1:-1]
-        initial_poles = np.array([])
+        initial_poles = np.zeros(2*beta.size, dtype=np.complex128)
         p = np.array([[-loss_ratio + 1j], [-loss_ratio - 1j]])
+        i = 0
         for b in beta:
-            initial_poles = np.append(initial_poles, p*b)
+            initial_poles[i] = p[0]*b
+            initial_poles[i+1] = p[1]*b
+            i += 2
 
     poles = initial_poles
     for _ in range(n_iter):
@@ -366,6 +365,8 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
         poles = poles * s_scale
         if Nf > 1:
             for i in range(Nf):
+                #FIXME multidimensional function has worse fit when auto
+                #rescaling. Could it be that it is scaling wrongly?
                 scale_res = np.vectorize(lambda res: res * f_scale[i] * s_scale)
                 residues[i] = scale_res(residues[i])
         else:
