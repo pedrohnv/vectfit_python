@@ -340,7 +340,6 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
     s = s/s_scale
     if Nf > 1:
         for i in range(Nf):
-            print(f_scale)
             f[i] = f[i]/f_scale[i]
     else:
         f = f/f_scale
@@ -363,6 +362,8 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
     residues, d, h = get_residues(f, s, poles, asymptote=asymptote)
     if auto_rescale:
         poles = poles * s_scale
+        d = d * f_scale
+        h = h * f_scale / s_scale
         if Nf > 1:
             for i in range(Nf):
                 #FIXME multidimensional function has worse fit when auto
@@ -372,9 +373,6 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
         else:
             scale_res = np.vectorize(lambda res: res * f_scale * s_scale)
             residues = scale_res(residues)
-
-        d = d * f_scale
-        h = h * f_scale / s_scale
 
     return poles, residues, d, h
 

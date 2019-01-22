@@ -72,21 +72,20 @@ ax1 = fig1.add_subplot(111)
 ax1.set_yscale("log")
 ax1.set_xlabel("f [kHz]")
 ax1.set_ylabel("Magnitude [p.u.]")
-ax1.legend(["true", "fitted", "deviation"])
 for i in range(Nc):
     ax1.plot(freq, np.abs(f[i]), 'b-')
     ax1.plot(freq, np.abs(fitted_f[i]), 'r-')
     ax1.plot(freq, np.abs(fitted_f[i] - f[i]), 'g--')
-
+ax1.legend(["true", "fitted", "deviation"])
 
 fig2 = plt.figure(2)
 ax2 = fig2.add_subplot(111)
 #ax2.set_xscale("log")
 ax2.set_ylabel("Angle [deg]")
 ax2.set_xlabel("f [kHz]")
-ax2.legend(["true", "fitted"])
 for i in range(Nc):
     ax2.plot(freq, np.unwrap(np.angle(f[i], 'deg'), 180), 'b-')
     ax2.plot(freq, np.unwrap(np.angle(fitted_f[i], 'deg'), 180), 'r-')
+ax2.legend(["true", "fitted"])
 
 plt.show()
