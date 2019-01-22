@@ -7,7 +7,7 @@
  -Reading frequency response f(s) from disk. (contains 1 element)
  -Fitting f(s) using vectfit3.m
    -Initial poles: 3 linearly spaced complex pairs (N=6)
-   -3 iterations
+   -5 iterations
 
    This example script is a translation to Python from the one that is
    part of the vector fitting package (VFIT3.zip)
@@ -52,8 +52,7 @@ for n in range(bet.size):
 
 
 Niter = 5
-for i in range(Niter):
-    poles, residues, d, h = vector_fitting(f, s, initial_poles=poles)
+poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter)
 
 
 fitted_f = rational_model(s, poles, residues, d, h)

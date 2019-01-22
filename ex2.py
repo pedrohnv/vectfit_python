@@ -88,10 +88,7 @@ for n in range(bet.size):
 #poles = -np.linspace(w[0], w[Ns-1], N);
 
 Niter = 3
-for i in range(Niter):
-    poles, residues, d, h = vector_fitting(f, s, initial_poles=poles)
-
-
+poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter)
 f1 = rational_model(s, poles, residues[0], d[0], h[0])
 f2 = rational_model(s, poles, residues[1], d[1], h[1])
 
