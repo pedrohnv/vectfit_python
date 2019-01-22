@@ -86,7 +86,7 @@ for n in range(bet.size):
 # Real starting poles :
 #poles = -np.linspace(w[0], w[Ns-1], N);
 Niter = 3
-poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter, auto_rescale=True)
+poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter, auto_rescale=False)
 foo = np.vectorize( lambda i: rational_model(s, poles, residues[i], d[i], h[i]) )
 f1 = foo(0)
 f2 = foo(1)
