@@ -46,8 +46,8 @@ def rational_model(s, poles, residues, d, h):
     s : array of complex frequencies.
     poles : array of the pn
     residues : array of the rn
-    d : array, offset
-    h : array, slope
+    d : real, offset
+    h : real, slope
 
     Returns
     -------
@@ -106,7 +106,7 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True,
 
     Parameters
     ----------
-    f : array of the complex data to fit
+    f : array (Nf, Nsample) of the complex data to fit
     s : complex sampling points of f
     poles : initial poles guess
         note: All complex poles must come in sequential complex
@@ -121,11 +121,13 @@ def residues_equation(f, s, poles, cindex, sigma_residues=True,
     -------
     A, b : of the equation Ax = b
     """
+    f = f.T
     try:
         Ns, Ndim = np.shape(f)
     except ValueError:
         Ns = s.size
         Ndim = 1
+
     N = poles.size
     A0_list = []
     A1_list = []
@@ -178,7 +180,7 @@ def get_poles(f, s, poles, asymptote='affine'):
 
     Parameters
     ----------
-    f : array of the complex data to fit
+    f : array (Nf, Nsample) of the complex data to fit
     s : complex sampling points of f
     poles : initial poles guess
         note: All complex poles must come in sequential complex
@@ -231,7 +233,7 @@ def get_residues(f, s, poles, asymptote='affine'):
 
     Parameters
     ----------
-    f : array of the complex data to fit
+    f : array (Nf, Nsample) of the complex data to fit
     s : complex sampling points of f
     poles : calculated poles (by get_poles)
     asymptote : shape of the asymptote : affine, linear, constant or None
@@ -243,11 +245,11 @@ def get_residues(f, s, poles, asymptote='affine'):
     h : adjusted slope
     """
     try:
-        Ns, Ndim = np.shape(f)
+        Ns, Ndim = np.shape(f.T)
     except ValueError:
         Ns = len(s)
         Ndim = 1
-    print(Ndim)
+
     N = len(poles)
     cindex = flag_poles(poles, Ns)
 
@@ -294,7 +296,7 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
 
     Parameters
     ----------
-    f : array (Nsample, Nf) of the complex data to fit
+    f : array (Nf, Nsample) of the complex data to fit
     s : array (Nsample,) complex sampling points of f
     initial_poles : optional array, default=None
         The initial pole guess
@@ -317,17 +319,36 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
     d : adjusted offset array (Nf,)
     h : adjusted slope array (Nf,)
     """
+    try:
+        Nf, Ns = f.shape
+    except ValueError:
+        Nf = 1
+        Ns = f.shape[0]
+
     if auto_rescale:
         s_scale = abs(s[-1])
         f_scale = np.max(np.abs(f))
-        #foo = np.vectorize(lambda f: np.max(np.abs(f)))
-        #f_scale = foo(f)
+        if Nf > 1:
+            f_scale = np.ones(Nf, dtype=np.complex128)
+            for i in range(Nf):
+                f_scale[i] = np.max(np.abs(f[i]))
+        else:
+            f_scale = np.max(np.abs(f))
     else:
         s_scale = 1
-        f_scale = 1
+        if Nf > 1:
+            f_scale = np.ones(Nf)
+        else:
+            f_scale = 1
 
     s = s/s_scale
-    f = f/f_scale
+    if Nf > 1:
+        for i in range(Nf):
+            print(f_scale)
+            f[i] = f[i]/f_scale[i]
+    else:
+        f = f/f_scale
+
     w = s.imag
     if initial_poles is None:
         beta = np.linspace(w[0], w[-1], poles_pairs+2)[1:-1]
@@ -343,11 +364,17 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
     residues, d, h = get_residues(f, s, poles, asymptote=asymptote)
     if auto_rescale:
         poles = poles * s_scale
-        scale_res = np.vectorize(lambda res: res * f_scale * s_scale)
-        residues = scale_res(residues)
+        if Nf > 1:
+            for i in range(Nf):
+                scale_res = np.vectorize(lambda res: res * f_scale[i] * s_scale)
+                residues[i] = scale_res(residues[i])
+        else:
+            scale_res = np.vectorize(lambda res: res * f_scale * s_scale)
+            residues = scale_res(residues)
+
         d = d * f_scale
         h = h * f_scale / s_scale
-        
+
     return poles, residues, d, h
 
 
