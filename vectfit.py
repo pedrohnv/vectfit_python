@@ -38,7 +38,6 @@ import warnings
 
 def rational_model(s, poles, residues, d, h):
     """
-    Complex rational function.
     Complex rational function. Multiple functions can be returned if the
     input parameters are multidimensional.
 
@@ -288,8 +287,8 @@ def get_residues(f, s, poles, asymptote='affine'):
     return residues, np.array(d), np.array(h)
 
 
-def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
-                   initial_poles=None, asymptote='affine', auto_rescale=False):
+def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
+                   n_iter=1, asymptote='affine', auto_rescale=False):
     """
     Makes the vector fitting of a complex function.
 
@@ -297,26 +296,26 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
     ----------
     f : array (Nsample, Nf) of the complex data to fit
     s : array (Nsample,) complex sampling points of f
+    initial_poles : optional array, default=None
+        The initial pole guess
     poles_pairs : optional int, default=10
         number of conjugate pairs of the fitting function.
         Only used if initial_poles=None
     loss_ratio : optional float, default=0.01
         The initial poles guess, if not given, are estimated as
         w*(-loss_ratio + 1j)
-    n_iter : optional int, default=3
+    n_iter : optional int, default=1
         number of iterations to do when calculating the poles, i.e.,
         consecutive pole fitting
-    initial_poles : optional array, default=None
-        The initial pole guess
     auto_rescale : optional, default=False
         if the problem should be rescaled during the fitting
 
     Returns
     -------
-    poles : adjusted poles
-    residues : adjusted residues
-    d : adjusted offset
-    h : adjusted slope
+    poles : adjusted poles array (Npoles,)
+    residues : adjusted residues array (Nf, Nresidues)
+    d : adjusted offset array (Nf,)
+    h : adjusted slope array (Nf,)
     """
     if auto_rescale:
         s_scale = abs(s[-1])
