@@ -39,14 +39,16 @@ import warnings
 def rational_model(s, poles, residues, d, h):
     """
     Complex rational function.
+    Complex rational function. Multiple functions can be returned if the
+    input parameters are multidimensional.
 
     Parameters
     ----------
     s : array of complex frequencies.
     poles : array of the pn
     residues : array of the rn
-    d : real, offset
-    h : real, slope
+    d : array, offset
+    h : array, slope
 
     Returns
     -------
@@ -85,9 +87,10 @@ def flag_poles(poles, Ns):
     N = len(poles)
     cindex = np.zeros(N)
     for i, p in enumerate(poles):
-        if p.imag != 0:
+        #if p.imag != 0:
+        if not np.isclose(p.imag, 0.):
             if i == 0 or cindex[i-1] != 1:
-                assert poles[i].conjugate() == poles[i+1], (
+                assert np.isclose(poles[i].conjugate(), poles[i+1]), (
                         "Complex poles"" must come in conjugate "
                         +"pairs: %s, %s" % (poles[i], poles[i+1]))
                 cindex[i] = 1
@@ -292,8 +295,8 @@ def vector_fitting(f, s, poles_pairs=10, loss_ratio=0.01, n_iter=3,
 
     Parameters
     ----------
-    f : array of the complex data to fit
-    s : complex sampling points of f
+    f : array (Nsample, Nf) of the complex data to fit
+    s : array (Nsample,) complex sampling points of f
     poles_pairs : optional int, default=10
         number of conjugate pairs of the fitting function.
         Only used if initial_poles=None
