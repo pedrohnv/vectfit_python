@@ -16,7 +16,7 @@
 from vectfit import *
 import numpy as np
 
-fid1 = open('/home/pedro/codigos/vectfit_python/03PK10.txt', 'r')
+fid1 = open('03PK10.txt', 'r')
 line = fid1.readline()
 A1 = float(line.split()[0])
 A2 = float(line.split()[1])
@@ -52,9 +52,8 @@ for n in range(bet.size):
 
 
 Niter = 5
-poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter)
-
-
+poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter,
+                                       auto_rescale=True)
 fitted_f = rational_model(s, poles, residues, d, h)
 
 # PLOT
