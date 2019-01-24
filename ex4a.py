@@ -28,8 +28,8 @@ for k in range(Ns):
     s[k] = float(fid1.readline())
     for row in range(Nc):
         for col in range(Nc):
-            dum1 = float(fid1.readline())
-            dum2 = float(fid1.readline())
+            dum1 = np.float64(fid1.readline())
+            dum2 = np.float64(fid1.readline())
             bigY[row,col,k] = dum1 + 1j*dum2
 
 fid1.close()
@@ -38,7 +38,7 @@ s = 1j*s
 #Extracting first column
 f = np.zeros((Nc,Ns), dtype=np.complex64)
 for n in range(Nc):
-    f[n] = bigY[n,1,:]
+    f[n] = bigY[n,0,:]
 
 #=====================================
 # Rational function approximation of f(s):
