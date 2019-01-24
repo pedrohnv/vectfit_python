@@ -87,16 +87,15 @@ for n in range(bet.size):
 #poles = -np.linspace(w[0], w[Ns-1], N);
 Niter = 3
 poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter, auto_rescale=False)
-foo = lambda i: rational_model(s, poles, residues[i], d[i], h[i])
-f1 = foo(0)
-f2 = foo(1)
-
-print("rmserr =")
+fitted_f = np.zeros(f.shape, dtype=np.complex64)
 Nc = 2
 for i in range(Nc):
-    diff = foo(i) - f[i]
-    rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(diff) ))) )/np.sqrt(Nc*Ns)
-    print("       ", rmserr)
+    fitted_f[i] = rational_model(s, poles, residues[i], d[i], h[i])
+
+rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(fitted_f - f) ))) )/np.sqrt(Nc*Ns)
+print("rmserr =", rmserr)
+f1 = fitted_f[0]
+f2 = fitted_f[1]
 
 # PLOT
 fig1 = plt.figure(1)
