@@ -345,8 +345,8 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
     else:
         f = f/f_scale
 
-    w = s.imag
     if initial_poles is None:
+        w = s.imag
         beta = np.linspace(w[0], w[-1], poles_pairs+2)[1:-1]
         initial_poles = np.zeros(2*beta.size, dtype=np.complex128)
         p = np.array([[-loss_ratio + 1j], [-loss_ratio - 1j]])

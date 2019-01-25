@@ -58,14 +58,30 @@ for n in range(bet.size):
 
 
 Niter = 5
-poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter,
-                                       auto_rescale=False)
-fitted_f = np.zeros(f.shape, dtype=np.complex64)
-for i in range(Nc):
-    fitted_f[i] = rational_model(s, poles, residues[i], d[i], h[i])
+# residues, d, h are calculated after the last iteration.
+# Tracking the RMS error for each iteration slows down the computation.
+track_rms = True
+if track_rms:
+    for k in range(Niter):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=1,
+                                                   auto_rescale=False)
+        fitted_f = np.zeros(f.shape, dtype=np.complex64)
+        for i in range(Nc):
+            fitted_f[i] = rational_model(s, poles, residues[i], d[i], h[i])
 
-rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(fitted_f - f) ))) )/np.sqrt(Nc*Ns)
-print("rmserr =", rmserr)
+        rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(fitted_f - f) ))) )/np.sqrt(Nc*Ns)
+        print("rmserr","iter", k+1, "=", rmserr)
+else:
+    poles, residues, d, h = vector_fitting(f, s, initial_poles=poles, n_iter=Niter,
+                                           auto_rescale=False)
+    fitted_f = np.zeros(f.shape, dtype=np.complex64)
+    for i in range(Nc):
+        fitted_f[i] = rational_model(s, poles, residues[i], d[i], h[i])
+    rmserr = np.sqrt( np.sum(np.sum(np.abs( np.square(fitted_f - f) ))) )/np.sqrt(Nc*Ns)
+    print("rmserr =", rmserr)
+
 
 freq = (w/(2*np.pi)/1e3).real
 # PLOT
