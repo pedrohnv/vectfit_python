@@ -185,7 +185,8 @@ def get_poles(f, s, poles, asymptote='affine'):
     poles : initial poles guess
         note: All complex poles must come in sequential complex
         conjugate pairs
-
+    asymptote : define the asymptotic behavior to be fitted :
+        None, 'linear', 'affine' or 'constant'
     Returns
     -------
     new_poles : adjusted poles
@@ -236,7 +237,8 @@ def get_residues(f, s, poles, asymptote='affine'):
     f : array (Nf, Nsample) of the complex data to fit
     s : complex sampling points of f
     poles : calculated poles (by get_poles)
-    asymptote : shape of the asymptote : affine, linear, constant or None
+    asymptote : define the asymptotic behavior to be fitted :
+        None, 'linear', 'affine' or 'constant'
 
     Returns
     -------
@@ -309,6 +311,9 @@ def vector_fitting(f, s, initial_poles=None, poles_pairs=10, loss_ratio=0.01,
     n_iter : optional int, default=1
         number of iterations to do when calculating the poles, i.e.,
         consecutive pole fitting
+    asymptote : optional, default=affine
+        define the asymptotic behavior to be fitted :
+            None, 'linear', 'affine' or 'constant'
     auto_rescale : optional, default=False
         if the problem should be rescaled during the fitting
 
